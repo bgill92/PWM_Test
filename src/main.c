@@ -13,6 +13,8 @@
 #include "libopencm3/stm32/f3/nvic.h"
 #include "libopencm3/stm32/exti.h"
 
+// #define PIN_A0 0x0001
+
 void clock_setup() {
 
 	// The default clock for the STM32f3discovery is the 72 MHz
@@ -71,6 +73,8 @@ void gpio_setup(){
 																	// motor controller
 
 	gpio_mode_setup(GPIOA,GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN, GPIO0); // Testing the Exti line
+
+	gpio_mode_setup(GPIOB,GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN, GPIO0); // Testing the Exti line 2
 
 	// Each pin can have multiple alternate functions, in this case
 	// we're using the GPIO_AF2 for this specific pin meaning it
@@ -231,9 +235,26 @@ void timer_setup() {
 void exti_setup(void){
 
 	exti_select_source(EXTI0, GPIOA);
+	exti_select_source(EXTI0, GPIOB);
 	exti_set_trigger(EXTI0, EXTI_TRIGGER_BOTH);
 	exti_enable_request(EXTI0);
 	
+
+}
+
+volatile uint16_t pin_A0;
+
+volatile bool prev_A0;
+
+volatile uint16_t pin_B0;
+
+volatile bool prev_B0;
+
+void encoder_setup() {
+
+	prev_A0 = (bool)(0x0001 & gpio_port_read(GPIOA)); // read the state of GPIOA0
+
+	prev_B0 = (bool)(0x0001 & gpio_port_read(GPIOB)); // read the state of GPIOB0
 
 }
 
@@ -241,7 +262,30 @@ void EXTI0_IRQHandler(void){
 
 	if (exti_get_flag_status(EXTI0)){
 		
-		trace_printf("ow\n");
+//		 trace_printf("ow\n");
+
+//		for (int i = 0; i < 100000; i++){
+//
+//			asm("nop");
+//
+//		}
+
+		pin_A0 = 0x0001 & gpio_port_read(GPIOA); // Read the state of pin A0
+
+//		pin_A0 = gpio_port_read(GPIOA); // Read the state of pin A0
+
+		trace_printf("%u\n",pin_A0);
+
+		if (pin_A0){
+
+			trace_printf("HIGH\n");
+
+		}
+		else {
+
+			trace_printf("LOW\n");
+
+		}
 
 		exti_reset_request(EXTI0);
 
@@ -257,7 +301,7 @@ void TIM3_IRQHandler(void) {
 
 	if(timer_get_flag(TIM3,TIM_SR_UIF)){
 
-		trace_printf("hi\n");
+		// trace_printf("hi\n");
 
 		timer_clear_flag(TIM3, TIM_SR_UIF);
 
@@ -295,6 +339,7 @@ int main(int argc, char* argv[])
 	exti_setup();
 
 	while(1){
+
 
 
 	}
